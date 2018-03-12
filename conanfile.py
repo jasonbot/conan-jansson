@@ -1,4 +1,4 @@
-from conans import ConanFile, CMake, tools
+from conans import ConanFile
 import os
 
 
@@ -18,10 +18,14 @@ class JanssonConan(ConanFile):
         tools.unzip(self.zip_name)
 
     def build(self):
-        self.run("cd {unzip_name} && ./configure && make".format(unzip_name=self.unzip_name))
+        shared = 'yes' if self.options.shared else 'no'
+        self.run("cd {unzip_name} && ./configure --enable-shared={shared} && make".format(unzip_name=self.unzip_name, shared=shared))
 
     def package(self):
-        self.copy("*.h", dst="include", src=self.unzip_name)
+        self.copy("*.h", dst="include", src=self.unzip_name, keep_path=False)
         self.copy("*.dll", dst="bin", src="{unzip_name}/src/.libs/".format(unzip_name=self.unzip_name))
         self.copy("*.so", dst="lib",  src="{unzip_name}/src/.libs/".format(unzip_name=self.unzip_name))
         self.copy("*.a", dst="lib", src="{unzip_name}/src/.libs/".format(unzip_name=self.unzip_name))
+
+    def package_info(self):
+        self.cpp_info.libs = ['jansson']
